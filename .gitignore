@@ -1,0 +1,29 @@
+# Dependências
+node_modules/
+npm-debug.log*
+
+# Chaves de API (IMPORTANTE!)
+src/js/config.js
+*.key
+.env
+
+# Arquivos de build
+dist/
+build/
+*.min.js
+*.min.css
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Arquivos temporários
+*.tmp
+*.temp
+.cache/

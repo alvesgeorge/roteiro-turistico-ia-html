@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roteiro Turístico IA - Planeje sua viagem perfeita</title>
+    
+    <!-- Meta tags para SEO -->
+    <meta name="description" content="Gere roteiros turísticos personalizados com Inteligência Artificial. Descubra os melhores destinos, restaurantes e atrações.">
+    <meta name="keywords" content="roteiro turístico, viagem, IA, turismo, destinos">
+    <meta name="author" content="George - Analista de Sistemas">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/dark-theme.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+
+    .roteiro-acoes {
+  display: flex;
+  gap: 1rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.roteiro-acoes .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.roteiro-acoes .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) {
+  .roteiro-acoes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .roteiro-acoes .btn {
+    justify-content: center;
+  }
+}
+        /* === ESTILOS ESPECÍFICOS DO MAPA === */
+
+        .mapa-container {
+    display: none; /* Oculto por padrão */
+}
+
+.mapa-container.show {
+    display: block !important; /* Forçar exibição */
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Garantir que o mapa tenha dimensões */
+#mapa {
+    height: 400px !important;
+    width: 100% !important;
+    min-height: 400px;
+    background: #f0f0f0;
+    border: 2px solid var(--primary-color);
+}
+
+/* Debug: mostrar sempre o container (temporário) */
+.mapa-container.debug {
+    display: block !important;
+    background: red !important;
+    border: 3px solid yellow !important;
+}
+
+        .mapa-container {
+            margin: 2rem 0;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .mapa-container h3 {
+            margin: 0 0 1rem 0;
+            color: var(--text-primary);
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #mapa {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #f8f9fa;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Garantir que o Leaflet funcione */
+        .leaflet-container {
+            height: 400px !important;
+            width: 100% !important;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        /* Controles do mapa */
+        .mapa-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-mapa {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .btn-mapa:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Popups do mapa */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-secondary) !important;
+        }
+
+        .leaflet-popup-close-button {
+            color: var(--text-primary) !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+        }
+
+        .leaflet-popup-close-button:hover {
+            color: var(--primary-color) !important;
+        }
+
+        /* Popup de atividade personalizado */
+        .popup-atividade {
+            font-family: var(--font-family);
+            max-width: 280px;
+            line-height: 1.4;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .popup-header h4 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        .popup-dia {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .popup-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .popup-item {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .popup-item strong {
+            color: var(--text-primary);
+        }
+
+        .popup-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.8rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .popup-validacao {
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .popup-fonte {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Loading do mapa */
+        .mapa-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .mapa-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsividade do mapa */
+        @media (max-width: 768px) {
+            #mapa {
+                height: 300px;
+            }
+            
+            .leaflet-container {
+                height: 300px !important;
+            }
+            
+            .mapa-controls {
+                justify-content: center;
+            }
+            
+            .btn-mapa {
+                font-size: 0.8em;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        /* Ocultar mapa inicialmente */
+        .mapa-container {
+            display: none;
+        }
+
+        .mapa-container.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🌍 Roteiro IA</h1>
+                    <span>Sua viagem perfeita com IA</span>
+                </div>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="btn btn-outline" onclick="toggleTheme()">
+                        <i data-lucide="sun"></i>
+                        <span>Tema Claro</span>
+                    </button>
+                    <nav class="nav">
+                        <button class="nav-btn" onclick="mostrarMeusRoteiros()">
+                            <i data-lucide="bookmark"></i>
+                            Meus Roteiros
+                        </button>
+                        <button class="nav-btn" onclick="mostrarFavoritos()">
+                            <i data-lucide="heart"></i>
+                            Favoritos
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-content">
+                    <h2>Descubra destinos incríveis com IA</h2>
+                    <p>Crie roteiros personalizados baseados em seus interesses, orçamento e preferências</p>
+                </div>
+            </section>
+
+            <!-- Formulário de Busca -->
+            <section class="search-section">
+                <div class="search-container">
+                    <div class="search-form">
+                        <div class="form-group">
+                            <label for="destino">🎯 Destino</label>
+                            <div class="autocomplete-container">
+                                <input 
+                                    type="text" 
+                                    id="destino" 
+                                    placeholder="Digite o destino desejado..."
+                                    autocomplete="off"
+                                >
+                                <div class="autocomplete-results" id="autocomplete-results"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duracao">⏱️ Duração</label>
+                            <select id="duracao">
+                                <option value="">Selecione a duração</option>
+                                <option value="1 dia">1 dia</option>
+                                <option value="2 dias">2 dias</option>
+                                <option value="3 dias">3 dias</option>
+                                <option value="1 semana">1 semana</option>
+                                <option value="2 semanas">2 semanas</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="orcamento">💰 Orçamento</label>
+                            <select id="orcamento">
+                                <option value="">Selecione o orçamento</option>
+                                <option value="Econômico (até R$ 500)">Econômico (até R$ 500)</option>
+                                <option value="Moderado (R$ 500-1500)">Moderado (R$ 500-1500)</option>
+                                <option value="Confortável (R$ 1500-3000)">Confortável (R$ 1500-3000)</option>
+                                <option value="Luxo (acima de R$ 3000)">Luxo (acima de R$ 3000)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="interesses">🎨 Tipo de Roteiro</label>
+                            <select id="interesses">
+                                <option value="">Selecione seus interesses</option>
+                                <option value="Cultural">Cultural</option>
+                                <option value="Gastronômico">Gastronômico</option>
+                                <option value="Aventura">Aventura</option>
+                                <option value="Relaxamento">Relaxamento</option>
+                                <option value="Família">Família</option>
+                                <option value="Romance">Romance</option>
+                                <option value="Natureza">Natureza</option>
+                                <option value="História">História</option>
+                            </select>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="form-actions">
+                            <button id="gerar-roteiro" type="button" class="btn btn-primary btn-large">
+                                <i data-lucide="sparkles"></i>
+                                Gerar Roteiro
+                            </button>
+                        </div>
+
+                        <!-- Filtros Avançados -->
+                        <div class="filtros-toggle">
+                            <button id="btn-filtros" class="btn btn-secondary">
+                                <i data-lucide="sliders-horizontal"></i>
+                                Filtros Avançados
+                            </button>
+                        </div>
+
+                        <div class="filtros-container" id="filtros-container" style="display: none;">
+                            <!-- Conteúdo dos filtros será inserido aqui -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resultados -->
+            <div id="resultado-roteiro" class="resultado-roteiro">
+                <!-- O roteiro será inserido aqui -->
+            </div>
+
+            <!-- MAPA INTEGRADO - IMPORTANTE! -->
+            <div class="mapa-container" id="mapa-container">
+                <h3>
+                    <i data-lucide="map-pin"></i>
+                    Localização das Atividades
+                </h3>
+                <div id="mapa" class="mapa"></div>
+                <div class="mapa-controls">
+                    <button class="btn-mapa" onclick="recarregarMapa()">
+                        <i data-lucide="refresh-cw"></i>
+                        Recarregar
+                    </button>
+                    <button class="btn-mapa" onclick="centralizarMapaCompleto()">
+                        <i data-lucide="crosshair"></i>
+                        Centralizar
+                    </button>
+                    <button class="btn-mapa" onclick="ajustarVisualizacao()">
+                        <i data-lucide="maximize"></i>
+                        Ajustar Zoom
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seção de resultados adicional (se necessário) -->
+            <section class="results-section" id="results-section" style="display: none;">
+                <div class="results-header">
+                    <h3>Ações do Roteiro</h3>
+                    <div class="results-actions">
+                        <button class="btn-action" onclick="salvarRoteiroCompleto()">
+                            <i data-lucide="save"></i>
+                            Salvar
+                        </button>
+                        <button class="btn-action" onclick="exportarPDFCompleto()">
+                            <i data-lucide="download"></i>
+                            Exportar PDF
+                        </button>
+                        <button class="btn-action" onclick="compartilharRoteiroCompleto()">
+                            <i data-lucide="share-2"></i>
+                            Compartilhar
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>&copy; 2024 Roteiro IA. Desenvolvido por George - Analista de Sistemas</p>
+                    <p>Powered by Groq AI, Geoapify & OpenStreetMap</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#" onclick="mostrarSobre()">Sobre</a>
+                    <a href="#" onclick="mostrarContato()">Contato</a>
+                    <a href="#" onclick="mostrarPrivacidade()">Privacidade</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Gerando seu roteiro...</h3>
+            <p>Analisando destino e criando experiências únicas</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    
+    <!-- Nossos Scripts - ORDEM IMPORTANTE! -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/roteiro-storage.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/filtros-roteiro.js"></script>
+    <script src="js/api-services.js"></script>
+    <script src="js/mapa-roteiro.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // === FUNÇÕES DO MAPA ===
+        function recarregarMapa() {
+            if (window.app && window.app.mapaRoteiro) {
+                console.log('🔄 Recarregando mapa...');
+                window.app.mapaRoteiro.destruir();
+                setTimeout(() => {
+                    window.app.mapaRoteiro.inicializar();
+                    if (window.app.roteiroAtual) {
+                        window.app.adicionarMarcadoresRoteiro(window.app.roteiroAtual);
+                    }
+                }, 500);
+            }
+        }
+
+        function centralizarMapaCompleto() {
+            if (window.app && window.app.mapaRoteiro && window.app.roteiroAtual) {
+                console.log('🎯 Centralizando mapa...');
+                if (window.app.roteiroAtual.coordenadas) {
+                    window.app.mapaRoteiro.centralizarMapa(
+                        window.app.roteiroAtual.coordenadas.lat,
+                        window.app.roteiroAtual.coordenadas.lng,
+                        13
+                    );
+                }
+            }
+        }
+
+        function ajustarVisualizacao() {
+            if (window.app && window.app.mapaRoteiro) {
+                console.log('🔍 Ajustando visualização...');
+                window.app.mapaRoteiro.ajustarVisualizacao();
+            }
+        }
+
+        // === FUNÇÃO DE TOGGLE DO TEMA ===
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            if (body && themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                const text = themeToggle.querySelector('span');
+                
+                if (body.classList.contains('dark-theme')) {
+                    body.classList.remove('dark-theme');
+                    body.classList.add('light-theme');
+                    if (icon) icon.setAttribute('data-lucide', 'moon');
+                    if (text) text.textContent = 'Tema Escuro';
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.classList.remove('light-theme');
+                    body.classList.add('dark-theme');
+                    if (icon) icon.setAttribute('data-lucide', 'sun');
+                    if (text) text.textContent = 'Tema Claro';
+                    localStorage.setItem('theme', 'dark');
+                }
+                
+                // Recriar ícones do Lucide
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // === CARREGAR TEMA SALVO ===
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            if (savedTheme === 'light') {
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
+                if (themeToggle) {
+                    const icon = themeToggle.querySelector('i');
+                    const text = themeToggle.querySelector('span');
+                    if (icon) icon.setAttribute('data-lucide', 'moon');
+                    if (text) text.textContent = 'Tema Escuro';
+                }
+            } else {
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+                if (themeToggle) {
+                    const icon = themeToggle.querySelector('i');
+                    const text = themeToggle.querySelector('span');
+                    if (icon) icon.setAttribute('data-lucide', 'sun');
+                    if (text) text.textContent = 'Tema Claro';
+                }
+            }
+            
+            console.log(`🎨 Tema ${savedTheme} carregado`);
+        }
+
+        // === FUNÇÕES PLACEHOLDER ===
+        function mostrarMeusRoteiros() {
+            console.log('📚 Meus Roteiros - Em desenvolvimento');
+            mostrarToast('Funcionalidade em desenvolvimento', 'info');
+        }
+
+        function mostrarFavoritos() {
+            console.log('❤️ Favoritos - Em desenvolvimento');
+            mostrarToast('Funcionalidade em desenvolvimento', 'info');
+        }
+
+        function salvarRoteiroCompleto() {
+            if (window.app && window.app.salvarRoteiro) {
+                window.app.salvarRoteiro();
+            } else {
+                mostrarToast('Nenhum roteiro para salvar', 'warning');
+            }
+        }
+
+        function exportarPDFCompleto() {
+            if (window.app && window.app.exportarRoteiro) {
+                window.app.exportarRoteiro();
+            } else {
+                mostrarToast('Nenhum roteiro para exportar', 'warning');
+            }
+        }
+
+        function compartilharRoteiroCompleto() {
+            if (window.app && window.app.compartilharRoteiro) {
+                window.app.compartilharRoteiro();
+            } else {
+                mostrarToast('Nenhum roteiro para compartilhar', 'warning');
+            }
+        }
+
+        function mostrarSobre() {
+            mostrarToast('Funcionalidade em desenvolvimento', 'info');
+        }
+
+        function mostrarContato() {
+            mostrarToast('Funcionalidade em desenvolvimento', 'info');
+        }
+
+        function mostrarPrivacidade() {
+            mostrarToast('Funcionalidade em desenvolvimento', 'info');
+        }
+
+        // === FUNÇÃO DE TOAST SIMPLES ===
+        function mostrarToast(mensagem, tipo = 'info') {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 500;
+                    z-index: 10000;
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                `;
+                document.body.appendChild(toast);
+            }
+            
+            const cores = {
+                info: '#3498db',
+                success: '#27ae60',
+                warning: '#f39c12',
+                error: '#e74c3c'
+            };
+            
+            toast.textContent = mensagem;
+            toast.style.backgroundColor = cores[tipo] || cores.info;
+            toast.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+            }, 3000);
+        }
+
+        // === INICIALIZAÇÃO ===
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando Roteiro IA...');
+            
+            // Carregar tema salvo
+            loadSavedTheme();
+            
+            // Verificar se Lucide está carregado
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            // Verificar dependências críticas
+            const dependenciasCriticas = ['CONFIG', 'ApiServices', 'MapaRoteiro'];
+            const faltandoCriticas = dependenciasCriticas.filter(dep => typeof window[dep] === 'undefined');
+            
+            if (faltandoCriticas.length > 0) {
+                console.error('❌ Dependências críticas não carregadas:', faltandoCriticas);
+                mostrarToast(`Erro: ${faltandoCriticas.join(', ')} não carregados`, 'error');
+                return;
+            }
+            
+            // Inicializar aplicação
+            try {
+                window.app = new App();
+                console.log('🎉 Roteiro IA inicializado com sucesso!');
+                mostrarToast('Roteiro IA carregado com sucesso!', 'success');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar aplicação:', error);
+                mostrarToast(`Erro de inicialização: ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

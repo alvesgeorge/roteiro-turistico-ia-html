@@ -1,0 +1,233 @@
+/* === DARK THEME APRIMORADO === */
+:root {
+  /* Cores do tema escuro */
+  --dark-bg-primary: #0f0f0f;
+  --dark-bg-secondary: #1a1a1a;
+  --dark-bg-tertiary: #2d2d2d;
+  --dark-bg-card: #1e1e1e;
+  --dark-bg-input: #2a2a2a;
+  --dark-bg-hover: #3a3a3a;
+  
+  --dark-text-primary: #ffffff;
+  --dark-text-secondary: #e0e0e0;
+  --dark-text-muted: #a0a0a0;
+  --dark-text-accent: #64b5f6;
+  
+  --dark-border: #404040;
+  --dark-border-light: #555555;
+  
+  --dark-primary: #2196f3;
+  --dark-primary-hover: #1976d2;
+  --dark-secondary: #424242;
+  --dark-secondary-hover: #616161;
+  
+  --dark-success: #4caf50;
+  --dark-warning: #ff9800;
+  --dark-danger: #f44336;
+  --dark-info: #2196f3;
+}
+
+/* === APLICAR TEMA ESCURO === */
+.dark-theme {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .header {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-tertiary) 100%);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.dark-theme .header h1 {
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .header span {
+  color: var(--dark-text-secondary);
+}
+
+.dark-theme .hero {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-card) 100%);
+  border: 1px solid var(--dark-border);
+}
+
+.dark-theme .hero h2 {
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .hero p {
+  color: var(--dark-text-secondary);
+}
+
+.dark-theme .search-container {
+  background: var(--dark-bg-card);
+  border: 1px solid var(--dark-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .form-group label {
+  color: var(--dark-text-primary);
+  font-weight: 500;
+}
+
+.dark-theme input,
+.dark-theme select {
+  background: var(--dark-bg-input);
+  border: 1px solid var(--dark-border);
+  color: var(--dark-text-primary);
+}
+
+.dark-theme input:focus,
+.dark-theme select:focus {
+  border-color: var(--dark-primary);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.dark-theme input::placeholder {
+  color: var(--dark-text-muted);
+}
+
+.dark-theme .btn-primary {
+  background: var(--dark-primary);
+  border-color: var(--dark-primary);
+  color: white;
+}
+
+.dark-theme .btn-primary:hover {
+  background: var(--dark-primary-hover);
+  border-color: var(--dark-primary-hover);
+}
+
+.dark-theme .btn-secondary {
+  background: var(--dark-secondary);
+  border-color: var(--dark-secondary);
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .btn-secondary:hover {
+  background: var(--dark-secondary-hover);
+  border-color: var(--dark-secondary-hover);
+}
+
+.dark-theme .btn-outline {
+  background: transparent;
+  border: 1px solid var(--dark-border);
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .btn-outline:hover {
+  background: var(--dark-bg-hover);
+  border-color: var(--dark-border-light);
+}
+
+.dark-theme .autocomplete-results {
+  background: var(--dark-bg-card);
+  border: 1px solid var(--dark-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .autocomplete-item {
+  color: var(--dark-text-primary);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.dark-theme .autocomplete-item:hover {
+  background: var(--dark-bg-hover);
+}
+
+.dark-theme .resultado-roteiro {
+  background: var(--dark-bg-card);
+  border: 1px solid var(--dark-border);
+}
+
+.dark-theme .dia-card {
+  background: var(--dark-bg-secondary);
+  border: 1px solid var(--dark-border);
+}
+
+.dark-theme .dia-header {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-secondary) 100%);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.dark-theme .dia-header h3 {
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .atividade-card {
+  background: var(--dark-bg-input);
+  border: 1px solid var(--dark-border);
+}
+
+.dark-theme .atividade-card:hover {
+  background: var(--dark-bg-hover);
+  border-color: var(--dark-border-light);
+}
+
+.dark-theme .atividade-horario {
+  color: var(--dark-text-accent);
+}
+
+.dark-theme .atividade-nome {
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .atividade-descricao {
+  color: var(--dark-text-secondary);
+}
+
+.dark-theme .atividade-info {
+  color: var(--dark-text-muted);
+}
+
+.dark-theme .custo-badge {
+  background: var(--dark-success);
+  color: white;
+}
+
+.dark-theme .tipo-badge {
+  background: var(--dark-info);
+  color: white;
+}
+
+.dark-theme .footer {
+  background: var(--dark-bg-secondary);
+  border-top: 1px solid var(--dark-border);
+  color: var(--dark-text-secondary);
+}
+
+.dark-theme .footer a {
+  color: var(--dark-text-accent);
+}
+
+.dark-theme .footer a:hover {
+  color: var(--dark-primary);
+}
+
+.dark-theme .loading-overlay {
+  background: rgba(15, 15, 15, 0.9);
+}
+
+.dark-theme .loading-content {
+  background: var(--dark-bg-card);
+  border: 1px solid var(--dark-border);
+  color: var(--dark-text-primary);
+}
+
+/* === MAPA NO TEMA ESCURO === */
+.dark-theme .mapa-container {
+  border: 1px solid var(--dark-border);
+}
+
+.dark-theme .leaflet-control-container {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.dark-theme .leaflet-popup-content-wrapper {
+  background: var(--dark-bg-card);
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .leaflet-popup-tip {
+  background: var(--dark-bg-card);
+}
