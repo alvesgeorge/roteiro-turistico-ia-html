@@ -472,22 +472,23 @@ mostrarRoteiro(roteiro) {
           </div>
         ` : ''}
         
-        <div class="roteiro-acoes">
-		  <button onclick="app.salvarRoteiro()" class="btn btn-secondary">
-		    💾 Salvar Roteiro
-		  </button>
-		  <button onclick="app.exportarRoteiro()" class="btn btn-primary">
-		    📄 Exportar PDF
-		  </button>
-		  <button onclick="app.exportarMarkdown()" class="btn btn-outline">
-		    📝 Exportar MD
-		  </button>
-		  <button onclick="app.compartilharRoteiro()" class="btn btn-outline">
-		    📤 Compartilhar
- 				 </button>
-</div>
+  
+      <div class="roteiro-acoes">
+        <button onclick="window.app.salvarRoteiro()" class="btn btn-secondary">
+          💾 Salvar Roteiro
+        </button>
+        <button onclick="window.app.exportarRoteiro()" class="btn btn-primary">
+          📄 Exportar PDF
+        </button>
+        <button onclick="window.app.exportarMarkdown()" class="btn btn-outline">
+          📝 Exportar MD
+        </button>
+        <button onclick="window.app.compartilharRoteiro()" class="btn btn-outline">
+          📤 Compartilhar
+        </button>
       </div>
-    `;
+    </div>
+  `;
     
     container.innerHTML = html;
     container.style.display = 'block';
@@ -654,7 +655,131 @@ mostrarMapa() {
     }
   }
 
- // Adicionar este método na classe App:
+ async exportarRoteiro() {
+  if (!this.roteiroAtual) {
+    this.mostrarToast('Nenhum roteiro para exportar', 'warning');
+    return;
+  }
+
+  try {
+    this.mostrarToast('Gerando PDF...', 'info');
+    
+    // Carregar jsPDF dinamicamente se necessário
+    await this.carregarJsPDF();
+    
+    // Criar PDF
+    const { jsPDF } = window.jsPDF;
+    const doc = new jsPDF();
+    
+    // Configurações
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    
+    // Função para quebrar página
+    const checkPageBreak = (height = 20) => {
+      if (yPos + height > pageHeight - margin) {
+        doc.addPage();
+        yPos = margin;
+      }
+    };
+    
+    // Função para adicionar texto
+    const addText = (text, fontSize = 12, style = 'normal') => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', style);
+      
+      const lines = doc.splitTextToSize(text, maxWidth);
+      const textHeight = lines.length * (fontSize * 0.5);
+      
+      checkPageBreak(textHeight);
+      doc.text(lines, margin, yPos);
+      yPos += textHeight + 5;
+    };
+    
+    // === CABEÇALHO ===
+    addText(`🌍 ${this.roteiroAtual.titulo}`, 20, 'bold');
+    addText(`📍 ${this.roteiroAtual.destino}`, 14, 'bold');
+    addText(`📅 ${this.roteiroAtual.duracao} | 💰 ${this.roteiroAtual.orcamento}`, 12);
+    yPos += 10;
+    
+    // === RESUMO ===
+    if (this.roteiroAtual.resumo) {
+      addText('📋 RESUMO', 16, 'bold');
+      addText(this.roteiroAtual.resumo, 11);
+      yPos += 10;
+    }
+    
+    // === DIAS ===
+    addText('🗓️ ROTEIRO DETALHADO', 18, 'bold');
+    
+    this.roteiroAtual.dias.forEach((dia) => {
+      checkPageBreak(40);
+      
+      // Título do dia
+      addText(`📅 DIA ${dia.dia}${dia.titulo ? ` - ${dia.titulo}` : ''}`, 16, 'bold');
+      
+      if (dia.regiao) {
+        addText(`📍 ${dia.regiao}`, 12);
+      }
+      
+      // Atividades
+      dia.atividades.forEach((atividade) => {
+        checkPageBreak(30);
+        
+        addText(`${atividade.horario} - ${atividade.nome}`, 13, 'bold');
+        
+        if (atividade.descricao) {
+          addText(`   ${atividade.descricao}`, 10);
+        }
+        
+        // Detalhes
+        const detalhes = [];
+        if (atividade.custo) detalhes.push(`💰 ${atividade.custo}`);
+        if (atividade.duracao) detalhes.push(`⏱️ ${atividade.duracao}`);
+        
+        if (detalhes.length > 0) {
+          addText(`   ${detalhes.join(' • ')}`, 9);
+        }
+        
+        if (atividade.endereco) {
+          addText(`   📍 ${atividade.endereco}`, 9);
+        }
+        
+        if (atividade.dicas) {
+          addText(`   💡 ${atividade.dicas}`, 9);
+        }
+        
+        yPos += 5;
+      });
+      
+      yPos += 10;
+    });
+    
+    // === RODAPÉ ===
+    checkPageBreak(30);
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    addText(`Gerado em ${dataAtual} por Roteiro IA`, 8);
+    if (this.roteiroAtual.fonte) {
+      addText(`Fonte: ${this.roteiroAtual.fonte}`, 8);
+    }
+    
+    // === SALVAR ===
+    const nomeArquivo = `roteiro-${this.roteiroAtual.destino.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+    doc.save(nomeArquivo);
+    
+    this.mostrarToast('PDF gerado com sucesso!', 'success');
+    
+  } catch (error) {
+    console.error('❌ Erro ao gerar PDF:', error);
+    this.mostrarToast('Erro ao gerar PDF, tentando Markdown...', 'warning');
+    this.exportarMarkdown();
+  }
+}
+
+// Método para carregar jsPDF dinamicamente
 async carregarJsPDF() {
   return new Promise((resolve, reject) => {
     if (typeof window.jsPDF !== 'undefined') {
@@ -664,38 +789,75 @@ async carregarJsPDF() {
 
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.integrity = 'sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNhh/TCPM+7AnEgjJ+vOOmY+3+BK47jrN4qDRJuDYoHqoA2ekO5jvdBdQ==';
+    script.crossOrigin = 'anonymous';
+    
     script.onload = () => {
-      console.log('✅ jsPDF carregado dinamicamente');
+      console.log('✅ jsPDF carregado');
       resolve();
     };
+    
     script.onerror = () => {
       console.error('❌ Erro ao carregar jsPDF');
       reject(new Error('Falha ao carregar jsPDF'));
     };
+    
     document.head.appendChild(script);
   });
 }
 
-// Atualizar o método exportarRoteiro para carregar jsPDF se necessário:
-async exportarRoteiro() {
+// Método para exportar Markdown (backup)
+exportarMarkdown() {
   if (!this.roteiroAtual) {
     this.mostrarToast('Nenhum roteiro para exportar', 'warning');
     return;
   }
 
   try {
-    this.mostrarToast('Preparando PDF...', 'info');
-    
-    // Carregar jsPDF se necessário
-    if (typeof window.jsPDF === 'undefined') {
-      await this.carregarJsPDF();
-    }
+    const conteudo = `# ${this.roteiroAtual.titulo}
 
-    // ... resto do código do PDF ...
+**📍 Destino:** ${this.roteiroAtual.destino}
+**📅 Duração:** ${this.roteiroAtual.duracao}
+**💰 Orçamento:** ${this.roteiroAtual.orcamento}
+
+## 📋 Resumo
+${this.roteiroAtual.resumo || 'Roteiro personalizado gerado com IA'}
+
+## 🗓️ Roteiro Detalhado
+
+${this.roteiroAtual.dias.map(dia => `
+### 📅 Dia ${dia.dia}${dia.titulo ? ` - ${dia.titulo}` : ''}
+${dia.regiao ? `**📍 Região:** ${dia.regiao}\n` : ''}
+${dia.atividades.map(atividade => `
+#### ${atividade.horario} - ${atividade.nome}
+- **Descrição:** ${atividade.descricao}
+- **Duração:** ${atividade.duracao || 'Não informado'}
+- **Custo:** ${atividade.custo || 'Não informado'}
+${atividade.endereco ? `- **Endereço:** ${atividade.endereco}` : ''}
+${atividade.dicas ? `- **💡 Dica:** ${atividade.dicas}` : ''}
+`).join('\n')}
+`).join('\n')}
+
+---
+*Roteiro gerado em ${new Date().toLocaleDateString('pt-BR')} pelo Roteiro IA*
+*${this.roteiroAtual.fonte ? `Fonte: ${this.roteiroAtual.fonte}` : ''}*
+`;
+
+    const blob = new Blob([conteudo], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `roteiro-${this.roteiroAtual.destino.replace(/[^a-zA-Z0-9]/g, '-')}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    this.mostrarToast('Arquivo Markdown exportado!', 'success');
+    
   } catch (error) {
-    console.error('❌ Erro ao exportar PDF:', error);
-    this.mostrarToast('Erro no PDF, exportando como Markdown...', 'warning');
-    this.exportarMarkdown();
+    console.error('❌ Erro ao exportar Markdown:', error);
+    this.mostrarToast('Erro ao exportar arquivo', 'error');
   }
 }
 // Método separado para exportar Markdown (como backup)
